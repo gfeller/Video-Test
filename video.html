@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Capture with Settings</title>
+    <style>
+        #video {
+            width: 100%;
+            max-width: 600px;
+            margin: auto;
+        }
+        #captureBtn {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #settingsForm {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<h1>Camera Capture with Settings</h1>
+<video id="video" autoplay></video>
+<button id="captureBtn">Capture Photo</button>
+<form id="settingsForm">
+    <label for="iso">ISO:</label>
+    <input type="number" id="iso" min="100" max="1600" step="100" value="400">
+
+    <label for="saturation">Saturation:</label>
+    <input type="range" id="saturation" min="-100" max="100" value="0">
+</form>
+
+<script>
+    let video;
+    let isoInput;
+    let saturationInput;
+
+    // Function to start the camera stream
+    async function startCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video = document.getElementById('video');
+            video.srcObject = stream;
+
+            // Get ISO and saturation input elements
+            isoInput = document.getElementById('iso');
+            saturationInput = document.getElementById('saturation');
+
+            // Update camera settings when inputs change
+            isoInput.addEventListener('input', updateCameraSettings);
+            saturationInput.addEventListener('input', updateCameraSettings);
+        } catch (error) {
+            console.error('Error accessing camera:', error);
+        }
+    }
+
+    // Function to capture a photo from the camera
+    function capturePhoto() {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // You can save or display the captured image as needed
+        const capturedImage = canvas.toDataURL('image/png');
+        console.log('Captured Image:', capturedImage);
+    }
+
+    // Function to update camera settings
+    function updateCameraSettings() {
+        const videoTrack = video.srcObject.getVideoTracks()[0];
+        const settings = videoTrack.getSettings();
+
+        // Attempt to update ISO setting
+        if ('iso' in settings) {
+            settings.iso = parseInt(isoInput.value);
+        }
+
+        // Attempt to update saturation setting
+        if ('saturation' in settings) {
+            settings.saturation = parseInt(saturationInput.value);
+        }
+
+        // Apply updated settings to the camera track
+        videoTrack.applySettings(settings);
+    }
+
+    // Event listener for the capture button
+    document.getElementById('captureBtn').addEventListener('click', capturePhoto);
+
+    // Start the camera when the page loads
+    startCamera();
+</script>
+</body>
+</html>
